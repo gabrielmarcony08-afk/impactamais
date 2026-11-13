@@ -6,10 +6,15 @@
   "scripts": {
     "dev": "vite --host --open",
     "start": "vite --host --open",
+    "server": "node server.js",
+    "dev:all": "concurrently -n WEB,API -c blue,green \"vite --host\" \"node server.js\"",
     "build": "vite build",
-    "preview": "vite preview --host --open"
+    "preview": "vite preview --host --open",
+    "serve": "npm run build && NODE_ENV=production node server.js"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
     "lucide-react": "^0.294.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
@@ -19,11 +24,12 @@
     "@types/react-dom": "^18.2.19",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.17",
+    "concurrently": "^8.2.2",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "vite": "^4.5.2"
   },
-  "allowScripts": {
-    "esbuild": true
+  "engines": {
+    "node": ">=18"
   }
 }

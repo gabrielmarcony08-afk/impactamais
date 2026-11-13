@@ -1,33 +1,34 @@
 /**
- * IMPACTA+ Cuiabá - Express 5 & MongoDB Atlas Backend Server
- * 
- * Este servidor backend fornece a API RESTful e suporte Node.js + Express 5 + MongoDB Atlas,
- * permitindo integração de banco de dados NoSQL e exportação CSV server-side.
+ * IMPACTA+ Cuiabá - Servidor Express 5
+ *
+ * API REST simples (dados em memória) + serve o build do Vite (pasta dist).
+ * Os dados NÃO persistem entre reinicializações. Para persistência real,
+ * conecte um banco (ex.: MongoDB Atlas via mongoose) no lugar do array abaixo.
+ *
+ * Desenvolvimento: `npm run dev:all` (Vite na 3000 + API na 3001, com proxy de /api)
+ * Produção local:  `npm run serve`
  */
 
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const DIST_DIR = path.join(__dirname, 'dist');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Configuração EJS para renderização server-side (quando aplicável)
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-
 // Servir arquivos estáticos do build
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use(express.static(DIST_DIR));
 
-// Dados em memória/mock (ou conecte via mongoose.connect(process.env.MONGODB_URI))
 let comerciosCuiaba = [
   {
     id: 'cuiaba-1',
@@ -97,54 +98,99 @@ let comerciosCuiaba = [
   },
 ];
 
-// API REST Endpoint: Listar comércios
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const str = (v, max = 200) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+
+// Listar comércios
 app.get('/api/comercios', (req, res) => {
   res.json({ success: true, total: comerciosCuiaba.length, data: comerciosCuiaba });
 });
 
-// API REST Endpoint: Cadastrar comércio
+// Cadastrar comércio (campos validados; sem espalhar req.body direto)
 app.post('/api/comercios', (req, res) => {
+  const body = req.body || {};
   const novoComercio = {
     id: `cuiaba-api-${Date.now()}`,
-    ...req.body,
+    name: str(body.name),
+    neighborhood: str(body.neighborhood),
     city: 'Cuiabá - MT',
-    verified: true,
+    category: str(body.category, 60),
+    product: str(body.product, 500),
+    phone: str(body.phone, 30),
+    email: str(body.email, 120),
+    // Novos cadastros só ficam verificados após revisão
+    verified: false,
   };
+
+  const erros = [];
+  if (!novoComercio.name) erros.push('Nome é obrigatório.');
+  if (!novoComercio.product) erros.push('Produto/serviço é obrigatório.');
+  if (!EMAIL_RE.test(novoComercio.email)) erros.push('E-mail inválido.');
+  if (erros.length) {
+    return res.status(400).json({ success: false, errors: erros });
+  }
+
   comerciosCuiaba.unshift(novoComercio);
   res.status(201).json({ success: true, message: 'Comércio cadastrado com sucesso!', data: novoComercio });
 });
 
-// API REST Endpoint: Login de Usuário / Comprador / Vendedor
+// Login de demonstração (sem autenticação real)
 app.post('/api/login', (req, res) => {
-  const { email, role } = req.body;
+  const email = str(req.body?.email, 120);
+  const role = req.body?.role === 'buyer' ? 'buyer' : 'merchant';
+  if (!EMAIL_RE.test(email)) {
+    return res.status(400).json({ success: false, message: 'E-mail inválido.' });
+  }
   res.json({
     success: true,
     user: {
       email,
-      role: role || 'merchant',
+      role,
       name: role === 'merchant' ? 'Comércio Cuiabano' : 'Grande Empresa Compradora',
-    }
+    },
   });
 });
 
-// API REST Endpoint: Exportar CSV Server-side
+// Escapa campo CSV (separador ';') e neutraliza injeção de fórmula em planilhas
+const csvCell = (value) => {
+  let s = String(value ?? '');
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  return `"${s.replace(/"/g, '""')}"`;
+};
+
+// Exportar CSV
 app.get('/api/export-csv', (req, res) => {
   const headers = ['ID', 'Nome', 'Bairro', 'Cidade', 'Categoria', 'Produto', 'Telefone', 'Email'];
-  const rows = comerciosCuiaba.map(c => [c.id, c.name, c.neighborhood, c.city, c.category, c.product, c.phone, c.email]);
-  
-  const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
-  
+  const rows = comerciosCuiaba.map((c) => [
+    c.id, c.name, c.neighborhood, c.city, c.category, c.product, c.phone, c.email,
+  ]);
+
+  const csvContent =
+    '\uFEFF' + [headers, ...rows].map((r) => r.map(csvCell).join(';')).join('\r\n');
+
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', 'attachment; filename="comercios_cuiaba.csv"');
   res.status(200).send(csvContent);
 });
 
-// SPA Fallback Route
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+// API inexistente -> 404 JSON (evita devolver o index.html para /api/...)
+app.use('/api', (req, res) => {
+  res.status(404).json({ success: false, message: 'Rota não encontrada.' });
 });
 
-if (process.env.NODE_ENV !== 'test') {
+// Fallback da SPA (Express 5: wildcard precisa ser nomeado)
+app.get('/{*splat}', (req, res) => {
+  const indexFile = path.join(DIST_DIR, 'index.html');
+  if (!fs.existsSync(indexFile)) {
+    return res
+      .status(404)
+      .send('Build não encontrado. Rode "npm run build" antes de iniciar o servidor.');
+  }
+  res.sendFile(indexFile);
+});
+
+// Na Vercel o app é exportado como função serverless (api/index.js), sem listen
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`[IMPACTA+] Servidor Express 5 operando na porta ${PORT}`);
   });

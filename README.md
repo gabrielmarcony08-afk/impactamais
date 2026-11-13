@@ -1,93 +1,85 @@
-# 🌟 IMPACTA+ — Mais Oportunidades. Menos Desigualdade.
+# 🌟 IMPACTA+ — Mais vitrine para o pequeno, mais fornecedores locais para o grande
 
-> **IMPACTA+** é uma iniciativa institucional e social focada na **ODS 10 — Redução das Desigualdades**, visando fortalecer pequenos comerciantes, microempreendedores (MEI) e negócios locais através de capacitação, inclusão digital, visibilidade e acesso a oportunidades comerciais.
+> **IMPACTA+** é uma vitrine B2B que conecta o comércio do bairro às grandes empresas de **Cuiabá – MT**. Uma iniciativa institucional e social do **Senac MT**, alinhada às **ODS 8** (Trabalho Decente e Crescimento Econômico) e **ODS 9** (Indústria, Inovação e Infraestrutura), com ações de inclusão digital e redução de desigualdades (ODS 10).
 
 ![IMPACTA+ Banner](./public/images/hero_entrepreneurs.jpg)
 
 ---
 
-## 🎯 Objetivo do Projeto
+## 🎯 Objetivo
 
-O **IMPACTA+** nasceu para equilibrar o mercado consumidor brasileiro. Enquanto grandes corporações contam com vastos recursos de marketing, crédito e infraestrutura tecnológica, pequenos comerciantes locais enfrentam barreiras diárias para divulgar seus produtos e manter a sustentabilidade financeira.
-
-Através de inclusão digital simples, mentoria prática e conexões comunitárias, o projeto impulsiona a autonomia dos pequenos negócios e gera renda local.
+Grandes empresas de Cuiabá precisam de fornecedores confiáveis; pequenos comerciantes e MEIs precisam de visibilidade. O IMPACTA+ aproxima os dois lados: o negócio local se cadastra em cerca de 2 minutos e passa a ser encontrado por mercados, redes e empresas compradoras.
 
 ---
 
-## 🚀 Funcionalidades & Seções do Site
+## 🚀 Funcionalidades
 
-- **Header Responsivo & Glassmorphic:** Menu de navegação fixo com efeito de transparência, acionamento suave de âncoras e menu hambúrguer para dispositivos móveis.
-- **Hero Impactante:** Apresentação visual com ilustrações dedicadas ao pequeno comerciante brasileiro e badges interativos.
-- **O Problema:** 6 cards detalhando os desafios reais (tecnologia, divulgação, atração de clientes, capacitação, crédito e concorrência).
-- **Nossa Resposta (4 Pilares):** Capacitação, Tecnologia, Divulgação e Oportunidades.
-- **Como Funciona:** Fluxo visual de 4 etapas (*01 Cadastro, 02 Diagnóstico, 03 Desenvolvimento, 04 Crescimento*).
-- **Indicadores de Impacto:** Metas projetadas com contadores animados (*+100 negócios, +500 pessoas, +1.000 oportunidades, +20 comunidades*).
-- **Conexão ODS 10:** Seção dedicada ao Objetivos de Desenvolvimento Sustentável da ONU com **Modal Popup interativo** destacando as Metas 10.2 e 10.3.
-- **Quem Pode Participar:** Cards segmentados para comerciantes, MEIs, iniciantes, negócios comunitários, apoiadores e instituições parceiras.
-- **Sobre & Propósito:** Apresentação institucional de Propósito, Visão e Valores.
-- **Formulário de Contato Inteligente:** Validação em tempo real (nome, e-mail, telefone, tipo de participação e mensagem) com confirmação visual.
+- Cadastro de comércios locais (nome, bairro, categoria, produto/serviço e contato)
+- Vitrine de fornecedores de Cuiabá com selo de verificação
+- Seções institucionais: problema, nossa resposta, como funciona, indicadores de impacto e conexão com as ODS
+- Formulário de contato com validação em tempo real
+- API REST (Express 5) com exportação de comércios em CSV
+- Layout responsivo com Tailwind CSS
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 🛠️ Tecnologias
 
-- **[React 18](https://reactjs.org/)** — Arquitetura de componentes reutilizáveis e declarativa.
-- **[Vite 4](https://vitejs.dev/)** — Bundler moderno e de alta performance.
-- **[Tailwind CSS v3](https://tailwindcss.com/)** — Framework utilitário de CSS responsivo com tema customizado.
-- **[Lucide React](https://lucide.dev/)** — Ícones vetoriais modernos.
-- **Google Fonts** — Tipografia *Plus Jakarta Sans* e *Inter*.
+- [React 18](https://reactjs.org/) + [Vite 4](https://vitejs.dev/)
+- [Tailwind CSS v3](https://tailwindcss.com/)
+- [Lucide React](https://lucide.dev/)
+- [Express 5](https://expressjs.com/) (API e servidor do build)
+- Google Fonts: *Plus Jakarta Sans* e *Inter*
 
 ---
 
-## 💻 Como Rodar Localmente
+## 💻 Como rodar localmente
 
-### Pré-requisitos
-- Node.js instalado (versão 16 ou superior)
-- NPM instalado
+**Pré-requisitos:** Node.js 18+ e npm.
 
-### Passo a passo
+```bash
+git clone https://github.com/gabrielmarcony08-afk/impactamais.git
+cd impactamais
+npm install
+```
 
-1. **Clone este repositório:**
-   ```bash
-   git clone https://github.com/gabrielmarcony08-afk/impactamais.git
-   cd impactamais
-   ```
+| Comando | O que faz |
+| --- | --- |
+| `npm run dev` | Só o front-end (Vite) em http://localhost:3000 |
+| `npm run dev:all` | Front-end (porta 3000) + API Express (porta 3001). O Vite encaminha `/api` para a API |
+| `npm run build` | Gera o build de produção em `dist/` |
+| `npm run serve` | Faz o build e serve tudo pelo Express (porta 3001) |
 
-2. **Instale as dependências:**
-   ```bash
-   npm install
-   ```
+No Windows, `rodar-no-chrome.bat` inicia o servidor de desenvolvimento e abre o Chrome.
 
-3. **Inicie o servidor de desenvolvimento:**
-   ```bash
-   npm run dev
-   # ou
-   npm start
-   ```
+### Endpoints da API
 
-4. **Acesse no navegador:**
-   O projeto abrirá automaticamente no endereço: [http://localhost:3000](http://localhost:3000)
+| Método | Rota | Descrição |
+| --- | --- | --- |
+| GET | `/api/comercios` | Lista os comércios |
+| POST | `/api/comercios` | Cadastra um comércio (`name`, `product` e `email` obrigatórios) |
+| POST | `/api/login` | Login de demonstração (sem autenticação real) |
+| GET | `/api/export-csv` | Exporta os comércios em CSV |
+
+> ⚠️ Os dados da API ficam **em memória** e são perdidos ao reiniciar. Para persistência, conecte um banco de dados (ex.: MongoDB Atlas).
 
 ---
 
 ## ☁️ Publicação na Vercel
 
-Este projeto já possui o arquivo de configuração [`vercel.json`](./vercel.json) pronto para deploy na Vercel!
+O [`vercel.json`](./vercel.json) publica o front-end (Vite, saída em `dist`) e encaminha `/api/*` para a função serverless `api/index.js`, que reutiliza o `server.js`.
 
-### Como publicar na Vercel:
+> ⚠️ Na Vercel os dados em memória **não são compartilhados nem persistem** entre execuções da função. Para uso real, conecte um banco de dados (ex.: MongoDB Atlas).
 
-1. Acesse o painel da **[Vercel](https://vercel.com/)** e faça login com seu GitHub.
-2. Clique em **"Add New"** > **"Project"**.
-3. Importe o repositório `gabrielmarcony08-afk/impactamais`.
-4. Mantenha as configurações padrão (Framework Preset: **Vite**, Output Directory: `dist`).
-5. Clique em **"Deploy"**.
+1. Acesse a [Vercel](https://vercel.com/) e entre com o GitHub.
+2. **Add New → Project** e importe `gabrielmarcony08-afk/impactamais`.
+3. Mantenha Framework Preset **Vite** e Output Directory `dist`.
+4. Clique em **Deploy**.
 
 ---
 
 ## 📄 Licença
 
-Este projeto é desenvolvido para fins sociais e institucionais de apoio ao empreendedorismo local e redução das desigualdades.
+Projeto desenvolvido para fins sociais e institucionais de apoio ao empreendedorismo local.
 
----
-
-<p center>Desenvolvido com 💚 para fortalecer o pequeno comerciante brasileiro.</p>
+<p align="center">Desenvolvido com 💚 para fortalecer o pequeno comerciante brasileiro.</p>
